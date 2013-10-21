@@ -3,7 +3,7 @@
  * OpenEyes
  *
  * (C) Moorfields Eye Hospital NHS Foundation Trust, 2008-2011
- * (C) OpenEyes Foundation, 2011-2012
+ * (C) OpenEyes Foundation, 2011-2013
  * This file is part of OpenEyes.
  * OpenEyes is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
  * OpenEyes is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
@@ -13,7 +13,7 @@
  * @link http://www.openeyes.org.uk
  * @author OpenEyes <info@openeyes.org.uk>
  * @copyright Copyright (c) 2008-2011, Moorfields Eye Hospital NHS Foundation Trust
- * @copyright Copyright (c) 2011-2012, OpenEyes Foundation
+ * @copyright Copyright (c) 2011-2013, OpenEyes Foundation
  * @license http://www.gnu.org/licenses/gpl-3.0.html The GNU General Public License V3.0
  */
 
@@ -28,33 +28,37 @@
  * The followings are the available model relations:
  */
 
-class Element_OphCiExamination_Investigation extends BaseEventTypeElement {
+class Element_OphCiExamination_Investigation extends BaseEventTypeElement 
+{
 	public $service;
 
 	/**
 	 * Returns the static model of the specified AR class.
 	 * @return the static model class
 	 */
-	public static function model($className = __CLASS__) {
+	public static function model($className = __CLASS__)
+	{
 		return parent::model($className);
 	}
 
 	/**
 	 * @return string the associated database table name
 	 */
-	public function tableName() {
+	public function tableName()
+	{
 		return 'et_ophciexamination_investigation';
 	}
 
 	/**
 	 * @return array validation rules for model attributes.
 	 */
-	public function rules() {
+	public function rules()
+	{
 		// NOTE: you should only define rules for those attributes that
 		// will receive user inputs.
 		return array(
-				array('event_id, description, ', 'safe'),
-				array('description, ', 'required'),
+				array('event_id, description', 'safe'),
+				array('description', 'required', 'message' => '{attribute} cannot be blank when there are no child elements', 'on' => 'formHasNoChildren'),
 				// The following rule is used by search().
 				// Please remove those attributes that should not be searched.
 				array('id, event_id, description, ', 'safe', 'on' => 'search'),
@@ -64,11 +68,11 @@ class Element_OphCiExamination_Investigation extends BaseEventTypeElement {
 	/**
 	 * @return array relational rules.
 	 */
-	public function relations() {
+	public function relations()
+	{
 		// NOTE: you may need to adjust the relation name and the related
 		// class name for the relations automatically generated below.
 		return array(
-				'element_type' => array(self::HAS_ONE, 'ElementType', 'id','on' => "element_type.class_name='".get_class($this)."'"),
 				'eventType' => array(self::BELONGS_TO, 'EventType', 'event_type_id'),
 				'event' => array(self::BELONGS_TO, 'Event', 'event_id'),
 				'user' => array(self::BELONGS_TO, 'User', 'created_user_id'),
@@ -79,7 +83,8 @@ class Element_OphCiExamination_Investigation extends BaseEventTypeElement {
 	/**
 	 * @return array customized attribute labels (name=>label)
 	 */
-	public function attributeLabels() {
+	public function attributeLabels()
+	{
 		return array(
 				'id' => 'ID',
 				'event_id' => 'Event',
@@ -87,11 +92,17 @@ class Element_OphCiExamination_Investigation extends BaseEventTypeElement {
 		);
 	}
 
+	public function canCopy()
+	{
+		return true;
+	}
+	
 	/**
 	 * Retrieves a list of models based on the current search/filter conditions.
 	 * @return CActiveDataProvider the data provider that can return the models based on the search/filter conditions.
 	 */
-	public function search() {
+	public function search()
+	{
 		// Warning: Please modify the following code to remove attributes that
 		// should not be searched.
 
@@ -108,24 +119,24 @@ class Element_OphCiExamination_Investigation extends BaseEventTypeElement {
 	}
 
 	/**
-	 * Set default values for forms on create
+	 * get the letter strings for this element and its children
+	 * method used by correspondence module if installed
+	 *
+	 * @return string
 	 */
-	public function setDefaultOptions() {
-	}
+	public function getLetter_string()
+	{
+		$res = "";
+		if ($this->description) {
+			$res .= "Investigation: $this->description\n";
+		}
 
-	protected function beforeSave() {
-		return parent::beforeSave();
-	}
+		foreach ($this->getChildren() as $el) {
+			if (method_exists($el, 'getLetter_string')) {
+				$res .= $el->getLetter_string() . "\n";
+			}
+		}
 
-	protected function afterSave() {
-		return parent::afterSave();
-	}
-
-	protected function beforeValidate() {
-		return parent::beforeValidate();
-	}
-
-	public function getLetter_string() {
-		return "Investigation: $this->description\n";
+		return $res;
 	}
 }

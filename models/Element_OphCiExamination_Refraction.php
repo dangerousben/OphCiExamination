@@ -3,7 +3,7 @@
  * OpenEyes
  *
  * (C) Moorfields Eye Hospital NHS Foundation Trust, 2008-2011
- * (C) OpenEyes Foundation, 2011-2012
+ * (C) OpenEyes Foundation, 2011-2013
  * This file is part of OpenEyes.
  * OpenEyes is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
  * OpenEyes is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
@@ -13,7 +13,7 @@
  * @link http://www.openeyes.org.uk
  * @author OpenEyes <info@openeyes.org.uk>
  * @copyright Copyright (c) 2008-2011, Moorfields Eye Hospital NHS Foundation Trust
- * @copyright Copyright (c) 2011-2012, OpenEyes Foundation
+ * @copyright Copyright (c) 2011-2013, OpenEyes Foundation
  * @license http://www.gnu.org/licenses/gpl-3.0.html The GNU General Public License V3.0
  */
 
@@ -38,28 +38,32 @@
  * @property string $right_type_other
  */
 
-class Element_OphCiExamination_Refraction extends SplitEventTypeElement {
+class Element_OphCiExamination_Refraction extends SplitEventTypeElement
+{
 	public $service;
 
 	/**
 	 * Returns the static model of the specified AR class.
 	 * @return the static model class
 	 */
-	public static function model($className = __CLASS__) {
+	public static function model($className = __CLASS__)
+	{
 		return parent::model($className);
 	}
 
 	/**
 	 * @return string the associated database table name
 	 */
-	public function tableName() {
+	public function tableName()
+	{
 		return 'et_ophciexamination_refraction';
 	}
 
 	/**
 	 * @return array validation rules for model attributes.
 	 */
-	public function rules() {
+	public function rules()
+	{
 		// NOTE: you should only define rules for those attributes that
 		// will receive user inputs.
 		return array(
@@ -74,18 +78,29 @@ class Element_OphCiExamination_Refraction extends SplitEventTypeElement {
 		);
 	}
 
-	public function sidedFields() {
+	public function sidedFields()
+	{
 		return array('sphere', 'cylinder', 'axis', 'axis_eyedraw', 'type_id', 'type_other');
 	}
-	
+
+	public function sidedDefaults()
+	{
+		return array('axis' => 0, 'type_id' => 1);
+	}
+
+	public function canCopy()
+	{
+		return true;
+	}
+
 	/**
 	 * @return array relational rules.
 	 */
-	public function relations() {
+	public function relations()
+	{
 		// NOTE: you may need to adjust the relation name and the related
 		// class name for the relations automatically generated below.
 		return array(
-				'element_type' => array(self::HAS_ONE, 'ElementType', 'id','on' => "element_type.class_name='".get_class($this)."'"),
 				'eventType' => array(self::BELONGS_TO, 'EventType', 'event_type_id'),
 				'event' => array(self::BELONGS_TO, 'Event', 'event_id'),
 				'eye' => array(self::BELONGS_TO, 'Eye', 'eye_id'),
@@ -99,7 +114,8 @@ class Element_OphCiExamination_Refraction extends SplitEventTypeElement {
 	/**
 	 * @return array customized attribute labels (name=>label)
 	 */
-	public function attributeLabels() {
+	public function attributeLabels()
+	{
 		return array(
 				'id' => 'ID',
 				'event_id' => 'Event',
@@ -116,12 +132,14 @@ class Element_OphCiExamination_Refraction extends SplitEventTypeElement {
 		);
 	}
 
-	public function getCombined($side) {
+	public function getCombined($side)
+	{
 		return $this->{$side.'_sphere'} . '/' . $this->{$side.'_cylinder'} . ' @ ' . $this->{$side.'_axis'} . '° ' . $this->getType($side);
 	}
 
-	public function getType($side) {
-		if($this->{$side.'_type_id'}) {
+	public function getType($side)
+	{
+		if ($this->{$side.'_type_id'}) {
 			return $this->{$side.'_type'}->name;
 		} else {
 			return $this->{$side.'_type_other'};
@@ -132,7 +150,8 @@ class Element_OphCiExamination_Refraction extends SplitEventTypeElement {
 	 * Retrieves a list of models based on the current search/filter conditions.
 	 * @return CActiveDataProvider the data provider that can return the models based on the search/filter conditions.
 	 */
-	public function search() {
+	public function search()
+	{
 		// Warning: Please modify the following code to remove attributes that
 		// should not be searched.
 
@@ -157,29 +176,8 @@ class Element_OphCiExamination_Refraction extends SplitEventTypeElement {
 		));
 	}
 
-	/**
-	 * Set default values for forms on create
-	 */
-	public function setDefaultOptions() {
-		$this->left_axis = 0;
-		$this->right_axis = 0;
-		$this->left_type_id = 1;
-		$this->right_type_id = 1;
-	}
-
-	protected function beforeSave() {
-		return parent::beforeSave();
-	}
-
-	protected function afterSave() {
-		return parent::afterSave();
-	}
-
-	protected function beforeValidate() {
-		return parent::beforeValidate();
-	}
-
-	public function getLetter_string() {
-		return "Refraction:\nright: ".$this->getCombined('right')."\nleft: ".$this->getCombined('right')."\n";
+	public function getLetter_string()
+	{
+		return "Refraction:\nright: ".$this->getCombined('right')."\nleft: ".$this->getCombined('left')."\n";
 	}
 }

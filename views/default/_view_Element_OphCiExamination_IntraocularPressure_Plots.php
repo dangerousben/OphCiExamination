@@ -38,14 +38,14 @@ foreach ($api->getIOPs($this->episode) as $data) {
 }
 $chart->setXAxisLabels($xaxis, $timeData = true);
 ?>
-
-<div id="placeholder" style="margin-left: auto;margin-right: auto;width:800px;height:300px"></div>
 <!--<p>
   <span id="hoverdata"></span>
 </p>-->
 <?php
 if (count($iops_left) > 1 || count($iops_right) > 1) {
 ?>
+
+<div id="placeholder" style="margin-left: auto;margin-right: auto;width:800px;height:300px"></div>
 
 <script type="text/javascript">
 <?php echo $chart->toString('placeholder');    ?>
@@ -67,7 +67,7 @@ if (count($iops_left) > 1 || count($iops_right) > 1) {
       $iopRight = $iops_right[0];
     }
     echo "There is only 1 recorded IOP for this patient (RE/LE): "
-    . $iopRight . " / " . $iopLeft
+    . $iopRight->right_reading->name . " / " . $iopLeft->left_reading->name
     . "<br>At least two (2) IOPs must be recorded for the graph to be drawn.";
     ?>
   </div>

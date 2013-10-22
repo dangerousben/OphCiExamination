@@ -140,6 +140,8 @@ class Element_OphCiExamination_GlaucomaManagement extends SplitEventTypeElement 
             'right_laser_id' => 'Laser',
             'left_surgery_id' => 'Surgery',
             'right_surgery_id' => 'Surgery',
+            'medication_1_left' => 'Medication',
+            'medication_1_right' => 'Medication',
         );
     }
 

@@ -33,6 +33,9 @@ $groupRemoval = $element->getConflictingGroups();
   // medications for the second list:
   var medications2 = new Array();
 <?php
+
+$assetUrl = Yii::app()->getAssetManager()->publish(Yii::getPathOfAlias('application.modules.OphCiExamination.assets.js'));
+Yii::app()->clientScript->registerScriptFile($assetUrl . '/dynamicChoiceList.js');
 $i = 1;
 foreach ($medications2group as $med => $medGroup) {
 //    foreach ($medGroup as $med => $group) {

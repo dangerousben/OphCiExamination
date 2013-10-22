@@ -22,93 +22,112 @@
 //$locations = Site::model()->getList();
 $laserOptions = $element->getLaserOptions();
 $surgeryOptions = $element->getSurgeryOptions();
+
+$medications = $element->getMedications();
 ?>
 
 
-<div class="data">
-
-  <?php
-  if ($element->medication_1_left || $element->medication_1_right) {
-    ?>
-    <?php
-    if ($element->medication_1_right) {
-      ?>
+<div class="eventDetail">
+  <table class="subtleWhite normalText">
+    <tbody>
       <?php
-      $medications = $element->getMedications();
-      echo "RE: " . $medications[$element->medication_1_right];
-      if ($element->medication_2_right) {
-        echo ", " . $medications[$element->medication_2_right];
-        if ($element->medication_3_right) {
-          echo ", " . $medications[$element->medication_3_right];
+      if ($element->right_surgery || $element->right_surgery || $element->medication_1_right) {
+        ?>
+        <tr>
+          <th><b>RE</b></th>
+        </tr>
+        <?php
+        if ($element->medication_1_right) {
+          ?>
+          <tr>
+            <th><?php echo CHtml::encode($element->getAttributeLabel('medication_1_right')) ?></th>
+            <td>
+              <?php
+              $medications = $element->getMedications();
+              echo $medications[$element->medication_1_right];
+              if ($element->medication_2_right) {
+                echo ", " . $medications[$element->medication_2_right];
+                if ($element->medication_3_right) {
+                  echo ", " . $medications[$element->medication_3_right];
+                }
+              }
+              ?></td>
+            </th>
+          </tr>
+          <?php
+        }
+        if ($element->right_laser) {
+          ?>
+          <tr>
+            <th><?php echo CHtml::encode($element->getAttributeLabel('right_laser')) ?></th>
+            <td><?php echo $laserOptions[$element->right_laser->id]; ?></td>
+          </tr>
+          <?php
+        }
+        if ($element->right_surgery) {
+          ?>
+          <tr>
+            <th><?php echo CHtml::encode($element->getAttributeLabel('right_surgery')) ?></th>
+            <td><?php echo $surgeryOptions[$element->right_surgery->id]; ?></td>
+          </tr>
+          <?php
         }
       }
-      ?>
-
-      <?php
-    }if ($element->medication_1_left) {
-      ?>
-      <?php
-      $medications = $element->getMedications();
-      if ($element->medication_1_left) {
-        echo "; ";
-      }
-      echo "LE: " . $medications[$element->medication_1_left];
-      if ($element->medication_2_left) {
-        echo ", " . $medications[$element->medication_2_left];
-        if ($element->medication_3_left) {
-          echo ", " . $medications[$element->medication_3_left];
+      if ($element->left_surgery || $element->left_surgery || $element->medication_1_left) {
+        ?>
+        <tr>
+          <th><b>LE</b></th>
+        </tr>
+        <?php
+        if ($element->medication_1_left) {
+          ?>
+          <tr>
+            <th><?php echo CHtml::encode($element->getAttributeLabel('medication_1_left')) ?></th>
+            <td>
+              <?php
+              $medications = $element->getMedications();
+              echo $medications[$element->medication_1_left];
+              if ($element->medication_2_left) {
+                echo ", " . $medications[$element->medication_2_left];
+                if ($element->medication_3_left) {
+                  echo ", " . $medications[$element->medication_3_left];
+                }
+              }
+              ?></td>
+            </th>
+          </tr>
+          <?php
+        }
+        if ($element->left_surgery) {
+          ?>
+          <tr>
+            <th><?php echo CHtml::encode($element->getAttributeLabel('left_surgery')) ?></th>
+            <td><?php echo $surgeryOptions[$element->left_surgery->id]; ?></td>
+          </tr>
+          <?php
+        }
+        if ($element->left_laser) {
+          ?>
+          <tr>
+            <th><?php echo CHtml::encode($element->getAttributeLabel('left_laser')) ?></th>
+            <td><?php echo $laserOptions[$element->left_laser->id]; ?></td>
+          </tr>
+          <?php
         }
       }
+      if ($element->comments) {
+        ?>
+        <tr>
+          <th>
+            <?php echo CHtml::encode($element->getAttributeLabel('comments')) ?>
+          </th>
+          <td>
+            <?php echo nl2br($element->comments) ?>
+          </td>
+        </tr>
+        <?php
+      }
       ?>
-
-      <?php
-    }
-    ?>
-    <br/><br/>
-    <?php
-  }
-  ?>
-  <?php
-  if ($element->left_laser || $element->right_laser) {
-    echo "Laser ";
-  }
-  if ($element->right_laser) {
-    echo "RE: " . $laserOptions[$element->right_laser->id]
-    ?>
-    <?php
-  }
-  if ($element->left_laser) {
-    if ($element->right_laser) {
-      echo ", ";
-    }
-    echo "LE: " . $laserOptions[$element->left_laser->id]
-    ?>
-    <?php
-  }
-  if ($element->left_laser || $element->right_laser) {
-    echo "<br/><br/>";
-  }
-  if ($element->left_surgery || $element->right_surgery) {
-    echo "Surgery ";
-  }
-  if ($element->right_surgery) {
-    echo "RE: " . $surgeryOptions[$element->right_surgery->id]
-    ?>
-    <?php
-  }
-  if ($element->left_surgery) {
-    if ($element->right_surgery) {
-      echo ", ";
-    }
-    echo "LE: " . $surgeryOptions[$element->left_surgery->id]
-    ?>
-    <?php
-  }
-  if ($element->left_surgery || $element->right_surgery) {
-    echo "<br/><br/>";
-  }
-  if ($element->comments) {
-    echo nl2br($element->comments) . "<br/><br/>";
-  }
-  ?>
+    </tbody>
+  </table>
 </div>

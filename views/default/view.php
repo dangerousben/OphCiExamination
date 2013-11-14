@@ -35,5 +35,5 @@ if ($this->editable && $next_step = $this->getNextStep()) {
 
 <h2 class="event-title"><?php echo $this->event_type->name?></h2>
 
-<?php $this->renderDefaultElements($this->action->id)?>
+<?php $this->renderOpenElements($this->action->id)?>
 <?php $this->endContent() ;?>

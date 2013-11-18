@@ -23,6 +23,12 @@
 
 class DefaultController extends BaseEventTypeController
 {
+	static protected $action_types = array(
+		'step' => self::ACTION_TYPE_EDIT,
+		'getDisorderTableRow' => self::ACTION_TYPE_FORM,
+		'loadInjectionQuestions' => self::ACTION_TYPE_FORM
+	);
+
 	// if set to true, we are advancing the current event step
 	private $step = false;
 
@@ -35,7 +41,7 @@ class DefaultController extends BaseEventTypeController
 	 */
 	protected function beforeAction($action)
 	{
-		if (!Yii::app()->getRequest()->getIsAjaxRequest() && !(in_array($action->id,$this->printActions())) ) {
+		if (!Yii::app()->getRequest()->getIsAjaxRequest() && !$this->isPrintAction($action->id)) {
 			Yii::app()->getClientScript()->registerScriptFile(Yii::app()->createUrl('js/spliteventtype.js'));
 		}
 
@@ -309,22 +315,6 @@ class DefaultController extends BaseEventTypeController
 			echo 'checked="checked" ';
 		}
 		echo '/></td><td><a href="#" class="small removeDiagnosis" rel="'.$disorder->id.'"><strong>Remove</strong></a></td></tr>';
-	}
-
-	public function actionDilationDrops()
-	{
-		if (!$drug = OphCiExamination_Dilation_Drugs::model()->findByPk(@$_GET['drug_id'])) {
-			throw new Exception('Dilation drug not found: '.@$_GET['drug_id']);
-		}
-		if (!in_array(@$_GET['side'],array('left','right'))) {
-			throw new Exception('Unknown side: '.@$_GET['side']);
-		}
-		$drug = new OphCiExamination_Dilation_Drug;
-		$drug->side_id = $_GET['side'] == 'left' ? 1 : 2;
-		$drug->drug_id = $_GET['drug_id'];
-		$drug->drops = 1;
-
-		$this->renderPartial('_dilation_drug_item',array('drug'=>$drug));
 	}
 
 	/**

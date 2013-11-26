@@ -1,11 +1,11 @@
 <?php
 
-class m130507_200641_glaucoma_element_sets extends CDbMigration {
+class m130304_000003_glaucoma_element_sets extends CDbMigration {
 
   private $common = array('Visual Acuity', 'Anterior Segment', 'Intraocular Pressure',
-      'OpticDisk', 'Glaucoma Management');
-  private $newEpisode = array('Risks', 'Central Corneal Thickness', 'Pupillary Abnormalities',
-      'Gonioscopy', 'Dilation', 'Posterior Segment', 'Diagnoses');
+      'Optic Disc', 'Glaucoma Management');
+  private $newEpisode = array('Risks', 'CCT', 'Pupillary Abnormalities',
+      'Gonioscopy', 'Dilation', 'Posterior Pole', 'Diagnoses');
 
   public function safeUp() {
     foreach (array('Glaucoma Default', 'Glaucoma New', 'Glaucoma Under investigation',
@@ -81,7 +81,9 @@ class m130507_200641_glaucoma_element_sets extends CDbMigration {
   }
 
   private function getElement($name) {
-    return ElementType::model()->find('name=\'' . $name . '\'');
+    $et = ElementType::model()->find('name=\'' . $name . '\'');
+	if (!$et) throw new Exception("Couldn't find element with name '{$name}'");
+	return $et;
   }
 
 }

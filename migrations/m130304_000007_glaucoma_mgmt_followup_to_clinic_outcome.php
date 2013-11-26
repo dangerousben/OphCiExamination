@@ -1,6 +1,6 @@
 <?php
 
-class m131021_185302_glaucoma_mgmt_followup_to_clinic_outcome extends CDbMigration {
+class m130304_000007_glaucoma_mgmt_followup_to_clinic_outcome extends CDbMigration {
 
   // Use safeUp/safeDown to do migration with transaction
   public function safeUp() {

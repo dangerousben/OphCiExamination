@@ -1,6 +1,6 @@
 <?php
 
-class m130404_100013_glaucoma_management extends OEMigration {
+class m130304_000000_glaucoma_management extends OEMigration {
 
     public function safeUp() {
         

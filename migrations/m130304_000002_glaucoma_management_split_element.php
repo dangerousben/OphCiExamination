@@ -1,6 +1,6 @@
 <?php
 
-class m130425_124711_glaucoma_management_split_element extends CDbMigration {
+class m130304_000002_glaucoma_management_split_element extends CDbMigration {
 
     // Use safeUp/safeDown to do migration with transaction
     public function safeUp() {

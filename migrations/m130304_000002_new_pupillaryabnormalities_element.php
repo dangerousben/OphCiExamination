@@ -1,6 +1,6 @@
 <?php
 
-class m130415_115500_new_pupillaryabnormalities_element extends OEMigration
+class m130304_000002_new_pupillaryabnormalities_element extends OEMigration
 {
 	public function up()
 	{

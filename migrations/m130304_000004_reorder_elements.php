@@ -1,6 +1,6 @@
 <?php
 
-class m130508_143412_reorder_elements extends CDbMigration {
+class m130304_000004_reorder_elements extends CDbMigration {
 
   public function safeUp() {
 

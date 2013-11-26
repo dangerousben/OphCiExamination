@@ -1,6 +1,6 @@
 <?php
 
-class m130308_145200_clinic_outcome_role extends OEMigration
+class m130304_000006_clinic_outcome_role extends OEMigration
 {
 	public function up()
 	{

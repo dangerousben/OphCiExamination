@@ -20,124 +20,121 @@ var dr_grade_et_class = 'Element_OphCiExamination_DRGrading';
 var examination_print_url, module_css_path;
 
 function gradeCalculator(_drawing) {
-	var doodleArray = _drawing.doodleArray;
-
-	var side = 'right';
-	if (_drawing.eye) {
-		side = 'left';
-	}
-
-	// Array to store counts of doodles of relevant classes
-	var countArray = new Array();
-	countArray['Microaneurysm'] = 0;
-	countArray['HardExudate'] = 0;
-	countArray['Circinate'] = 0;
-	countArray['BlotHaemorrhage'] = 0;
-	countArray['PreRetinalHaemorrhage'] = 0;
-	countArray['CottonWoolSpot'] = 0;
-	countArray['DiabeticNV'] = 0;
-	countArray['FibrousProliferation'] = 0;
-	countArray['LaserSpot'] = 0;
-	countArray['FocalLaser'] = 0;
-	countArray['MacularGrid'] = 0;
-	countArray['SectorPRPPostPole'] = 0;
-	countArray['PRPPostPole'] = 0;
-	countArray['IRMA'] = 0;
-	countArray['TractionRetinalDetachment'] = 0;
-
-	var retinopathy = "NO";
-	var maculopathy = "NO";
-	var retinopathy_photocoagulation = false;
-	var maculopathy_photocoagulation = false;
-	var clinicalret = "NR";
-	var clinicalmac = "NM";
-	var dnv_within = false;
 
 	// Get reference to PostPole doodle
 	var postPole = _drawing.lastDoodleOfClass('PostPole');
+	if (!postPole) return false;
 
-	if (postPole) {
-		// Iterate through doodles counting, and checking location
-		for (var i = 0; i < doodleArray.length; i++) {
-			var doodle = doodleArray[i];
-			countArray[doodle.className]++;
+	var grades = {
+		side: (_drawing.eye == ED.eye.Right) ? 'right' : 'left',
+		retinopathy: "NO",
+		maculopathy: "NO",
+		ret_photo: false,
+		mac_photo: false,
+		clinicalret: "NR",
+		clinicalmac: "NM",
+	};
 
-			// Exudates within one disk diameter of fovea
-			if (doodle.className == 'HardExudate' || doodle.className == 'Circinate') {
-				if (postPole.isWithinDiscDiametersOfFovea(doodle, 1)) maculopathy = 'MA';
+	// Counts of doodles of relevant classes
+	var counts = {
+		Microaneurysm: 0,
+		HardExudate: 0,
+		Circinate: 0,
+		BlotHaemorrhage: 0,
+		PreRetinalHaemorrhage: 0,
+		CottonWoolSpot: 0,
+		DiabeticNV: 0,
+		FibrousProliferation: 0,
+		LaserSpot: 0,
+		FocalLaser: 0,
+		MacularGrid: 0,
+		SectorPRPPostPole: 0,
+		PRPPostPole: 0,
+		IRMA: 0,
+		TractionRetinalDetachment: 0,
+	};
+
+	var dnv_within = false;
+
+	// Iterate through doodles counting, and checking location
+	for (var i = 0; i < doodleArray.length; i++) {
+		var doodle = doodleArray[i];
+		countArray[doodle.className]++;
+
+		// Exudates within one disk diameter of fovea
+		if (doodle.className == 'HardExudate' || doodle.className == 'Circinate') {
+			if (postPole.isWithinDiscDiametersOfFovea(doodle, 1)) grades.maculopathy = 'MA';
+		}
+		//TODO: needs to check against optic disc, not Fovea
+		/*
+		  if (doodle.className == 'DiabeticNV') {
+		  if (postPole.isWithinDiscDiametersOfFovea(doodle,1)) dnv_within = true;
+		  }
+		*/
+		if (doodle.className == 'LaserSpot' || doodle.className == 'FocalLaser') {
+			if (postPole.isWithinArcades(doodle)) {
+				grades.ret_photo = true;
 			}
-			//TODO: needs to check against optic disc, not Fovea
-			/*
-			if (doodle.className == 'DiabeticNV') {
-				if (postPole.isWithinDiscDiametersOfFovea(doodle,1)) dnv_within = true;
-			}
-			*/
-			if (doodle.className == 'LaserSpot' || doodle.className == 'FocalLaser') {
-				if (postPole.isWithinArcades(doodle)) {
-					retinopathy_photocoagulation = true;
-				}
-				else {
-					maculopathy_photocoagulation = true;
-				}
+			else {
+				grades.mac_photo = true;
 			}
 		}
-
-		if (countArray['Microaneurysm'] > 0) {
-			clinicalret = 'MN';
-		}
-
-		if (countArray['BlotHaemorrhage'] > 0 || countArray['IRMA'] > 0 || countArray['PreRetinalHaemorrhage']) {
-			clinicalret = 'MO';
-		}
-
-		if ((countArray['PreRetinalHaemorrhage'] || countArray['BlotHaemorrhage'] > 0) && countArray['IRMA'] > 0) {
-			clinicalret = 'SR';
-		}
-
-		if (countArray['DiabeticNV'] > 0) {
-			clinicalret = 'EP';
-			if (dnv_within || countArray['PreRetinalHaemorrhage']) {
-				clinicalret = 'HR';
-			}
-		}
-
-		if (countArray['BlotHaemorrhage'] > 0 || countArray['Microaneurysm'] > 0) {
-			var bestVa = OphCiExamination_VisualAcuity_bestForSide(side);
-
-			if (bestVa !== null && bestVa <= 95) {
-				maculopathy = 'MA';
-			}
-		}
-
-		// R1 (Background)
-		if (countArray['Microaneurysm'] > 0 || countArray['BlotHaemorrhage'] > 0 || countArray['HardExudate'] > 0 || countArray['CottonWoolSpot'] > 0 || countArray['Circinate'] > 0) {
-			retinopathy = "BA";
-		}
-
-		// R2
-		if (countArray['BlotHaemorrhage'] >= 2 || countArray['IRMA'] > 0) {
-			retinopathy = "PP";
-		}
-
-		// R3
-		if (countArray['PRPPostPole'] > 0) {
-			retinopathy = "PE";
-			retinopathy_photocoagulation = true;
-		}
-		if (countArray['DiabeticNV'] > 0 || countArray['PreRetinalHaemorrhage'] > 0 || countArray['FibrousProliferation'] > 0 || countArray['TractionRetinalDetachment'] > 0) {
-			retinopathy = "PR";
-		}
-
-		if (countArray['SectorPRPPostPole'] > 0 || countArray['MacularGrid'] > 0) {
-			maculopathy_photocoagulation = true;
-		}
-
-		// basic default setting for clincal maculopathy at the moment:
-		if (maculopathy == 'MA') clinicalmac = 'DS';
-
-		return [retinopathy, maculopathy, retinopathy_photocoagulation, maculopathy_photocoagulation, clinicalret, clinicalmac];
 	}
-	return false;
+
+	if (counts.Microaneurysm > 0) {
+		grades.clinicalret = 'MN';
+	}
+
+	if (counts.BlotHaemorrhage > 0 || counts.IRMA > 0 || counts.PreRetinalHaemorrhage) {
+		grades.clinicalret = 'MO';
+	}
+
+	if ((counts.PreRetinalHaemorrhage || counts.BlotHaemorrhage > 0) && counts.IRMA > 0) {
+		grades.clinicalret = 'SR';
+	}
+
+	if (counts.DiabeticNV > 0) {
+		grades.clinicalret = 'EP';
+		if (dnv_within || counts.PreRetinalHaemorrhage) {
+			grades.clinicalret = 'HR';
+		}
+	}
+
+	if (counts.BlotHaemorrhage > 0 || counts.Microaneurysm > 0) {
+		var bestVa = OphCiExamination_VisualAcuity_bestForSide(grades.side);
+
+		if (bestVa !== null && bestVa <= 95) {
+			grades.maculopathy = 'MA';
+		}
+	}
+
+	// R1 (Background)
+	if (counts.Microaneurysm > 0 || counts.BlotHaemorrhage > 0 || counts.HardExudate > 0 || counts.CottonWoolSpot > 0 || counts.Circinate > 0) {
+		grades.retinopathy = "BA";
+	}
+
+	// R2
+	if (counts.BlotHaemorrhage >= 2 || counts.IRMA > 0) {
+		grades.retinopathy = "PP";
+	}
+
+	// R3
+	if (counts.PRPPostPole > 0) {
+		grades.retinopathy = "PE";
+		grades.ret_photo = true;
+	}
+	if (counts.DiabeticNV > 0 || counts.PreRetinalHaemorrhage > 0 || counts.FibrousProliferation > 0 || counts.TractionRetinalDetachment > 0) {
+		grades.retinopathy = "PR";
+	}
+
+	if (counts.SectorPRPPostPole > 0 || counts.MacularGrid > 0) {
+		grades.mac_photo = true;
+	}
+
+	// basic default setting for clincal maculopathy at the moment:
+	if (grades.maculopathy == 'MA') grades.clinicalmac = 'DS';
+
+	return grades;
 }
 
 //returns the number of weeks booking recommendation from the DR grades (based on nsc retinopathy value for the given side)
@@ -170,19 +167,13 @@ function updateBookingWeeks(side) {
 	}
 }
 
-function updateDRGrades(_drawing, retinopathy, maculopathy, ret_photo, mac_photo, clinicalret, clinicalmac) {
-	if (_drawing.eye) {
-		var side = 'left';
-	}
-	else {
-		var side = 'right';
-	}
+function updateDRGrades(_drawing, grades) {
 
 	var dr_grade = $('.js-active-elements .' + dr_grade_et_class);
 	// clinical retinopathy
-	var crSel = dr_grade.find('select#'+dr_grade_et_class+'_'+side+'_clinicalret_id');
+	var crSel = dr_grade.find('select#'+dr_grade_et_class+'_'+grades.side+'_clinicalret_id');
 	crSel.find('option').each(function() {
-		if ($(this).attr('data-code') == clinicalret) {
+		if ($(this).attr('data-code') == grades.clinicalret) {
 			crSel.val($(this).val());
 			crSel.closest('.wrapper').attr('class', 'wrapper field-highlight inline ' + $(this).attr('class'));
 			return false;
@@ -190,13 +181,13 @@ function updateDRGrades(_drawing, retinopathy, maculopathy, ret_photo, mac_photo
 	});
 
 	// description
-	dr_grade.find('div .'+dr_grade_et_class+'_'+side+'_clinicalret_desc').hide();
-	dr_grade.find('div#'+dr_grade_et_class+'_'+side+'_clinicalret_desc_' + clinicalret.replace(/\s+/g, '')).show();
+	dr_grade.find('div .'+dr_grade_et_class+'_'+grades.side+'_clinicalret_desc').hide();
+	dr_grade.find('div#'+dr_grade_et_class+'_'+grades.side+'_clinicalret_desc_' + grades.clinicalret.replace(/\s+/g, '')).show();
 
 	// clinical maculopathy
-	var cmSel = dr_grade.find('select#'+dr_grade_et_class+'_'+side+'_clinicalmac_id');
+	var cmSel = dr_grade.find('select#'+dr_grade_et_class+'_'+grades.side+'_clinicalmac_id');
 	cmSel.find('option').each(function() {
-		if ($(this).attr('data-code') == clinicalmac) {
+		if ($(this).attr('data-code') == grades.clinicalmac) {
 			cmSel.val($(this).val());
 			cmSel.closest('.wrapper').attr('class', 'wrapper field-highlight inline ' + $(this).attr('class'));
 			return false;
@@ -204,21 +195,21 @@ function updateDRGrades(_drawing, retinopathy, maculopathy, ret_photo, mac_photo
 	});
 
 	// description
-	dr_grade.find('div .'+dr_grade_et_class+'_'+side+'_clinicalmac_desc').hide();
-	dr_grade.find('div#'+dr_grade_et_class+'_'+side+'_clinicalmac_desc_' + clinicalmac.replace(/\s+/g, '')).show();
+	dr_grade.find('div .'+dr_grade_et_class+'_'+grades.side+'_clinicalmac_desc').hide();
+	dr_grade.find('div#'+dr_grade_et_class+'_'+grades.side+'_clinicalmac_desc_' + grades.clinicalmac.replace(/\s+/g, '')).show();
 
 	// Retinopathy
-	var retSel = dr_grade.find('select#'+dr_grade_et_class+'_'+side+'_nscretinopathy_id');
+	var retSel = dr_grade.find('select#'+dr_grade_et_class+'_'+grades.side+'_nscretinopathy_id');
 	retSel.find('option').each(function() {
-		if ($(this).attr('data-code') == retinopathy) {
+		if ($(this).attr('data-code') == grades.retinopathy) {
 			retSel.val($(this).val());
 			retSel.closest('.wrapper').attr('class', 'wrapper field-highlight inline ' + $(this).attr('class'));
 			return false;
 		}
 	});
 
-	ret_photo_id = dr_grade_et_class+'_'+side+'_nscretinopathy_photocoagulation_';
-	if (ret_photo) {
+	var ret_photo_id = dr_grade_et_class+'_'+grades.side+'_nscretinopathy_photocoagulation_';
+	if (grades.ret_photo) {
 		dr_grade.find('input#' + ret_photo_id + '1').attr('checked', 'checked');
 	}
 	else {
@@ -226,21 +217,21 @@ function updateDRGrades(_drawing, retinopathy, maculopathy, ret_photo, mac_photo
 	}
 
 	// display description
-	dr_grade.find('div .'+dr_grade_et_class+'_'+side+'_nscretinopathy_desc').hide();
-	dr_grade.find('div#'+dr_grade_et_class+'_'+side+'_nscretinopathy_desc_' + retinopathy).show();
+	dr_grade.find('div .'+dr_grade_et_class+'_'+grades.side+'_nscretinopathy_desc').hide();
+	dr_grade.find('div#'+dr_grade_et_class+'_'+grades.side+'_nscretinopathy_desc_' + grades.retinopathy).show();
 
 	// Maculopathy
-	var macSel = dr_grade.find('select#'+dr_grade_et_class+'_'+side+'_nscmaculopathy_id');
+	var macSel = dr_grade.find('select#'+dr_grade_et_class+'_'+grades.side+'_nscmaculopathy_id');
 	macSel.find('option').each(function() {
-		if ($(this).attr('data-code') == maculopathy) {
+		if ($(this).attr('data-code') == grades.maculopathy) {
 			macSel.closest('.wrapper').attr('class', 'wrapper field-highlight inline ' + $(this).attr('class'));
 			macSel.val($(this).val());
 			return false;
 		}
 	});
 
-	mac_photo_id = dr_grade_et_class+'_'+side+'_nscmaculopathy_photocoagulation_';
-	if (mac_photo) {
+	var mac_photo_id = dr_grade_et_class+'_'+grades.side+'_nscmaculopathy_photocoagulation_';
+	if (grades.mac_photo) {
 		dr_grade.find('input#' + mac_photo_id + '1').attr('checked', 'checked');
 	}
 	else {
@@ -248,10 +239,10 @@ function updateDRGrades(_drawing, retinopathy, maculopathy, ret_photo, mac_photo
 	}
 
 	// display description
-	dr_grade.find('div .'+dr_grade_et_class+'_'+side+'_nscmaculopathy_desc').hide();
-	dr_grade.find('div#'+dr_grade_et_class+'_'+side+'_nscmaculopathy_desc_' + maculopathy).show();
+	dr_grade.find('div .'+dr_grade_et_class+'_'+grades.side+'_nscmaculopathy_desc').hide();
+	dr_grade.find('div#'+dr_grade_et_class+'_'+grades.side+'_nscmaculopathy_desc_' + grades.maculopathy).show();
 
-	updateBookingWeeks(side);
+	updateBookingWeeks(grades.side);
 }
 
 function posteriorListener(_drawing) {
@@ -514,7 +505,7 @@ $(document).ready(function() {
 				// the posterior segment drawing is available to sync values with
 				var grades = gradeCalculator(window[drawingName]);
 
-				updateDRGrades(window[drawingName], grades[0], grades[1], grades[2], grades[3], grades[4], grades[5]);
+				updateDRGrades(window[drawingName], grades);
 			}
 		});
 		$(this).hide();
@@ -1230,28 +1221,17 @@ function OphCiExamination_VisualAcuity_init() {
 function OphCiExamination_DRGrading_dirtyCheck(_drawing) {
 	var dr_grade = $('.' + dr_grade_et_class);
 	var grades = gradeCalculator(_drawing);
-	var retinopathy = grades[0],
-		maculopathy = grades[1],
-		ret_photo		= grades[2] ? '1' : '0',
-		mac_photo		= grades[3] ? '1' : '0',
-		clinicalret = grades[4],
-		clinicalmac = grades[5],
-		dirty				= false,
-		side				= 'right';
-
-	if (_drawing.eye) {
-			side = 'left';
-		}
+	var dirty = false;
 
 	// clinical retinopathy
-	var cSel = dr_grade.find('select#'+dr_grade_et_class+'_'+side+'_clinicalret_id');
+	var cSel = dr_grade.find('select#'+dr_grade_et_class+'_'+grades.side+'_clinicalret_id');
 	var cSelVal = cSel.val();
 
 	cSel.find('option').each(function() {
 		if ($(this).attr('value') == cSelVal) {
-			if ($(this).attr('data-code') != clinicalret) {
+			if ($(this).attr('data-code') != grades.clinicalret) {
 				dirty = true;
-				clinicalret = $(this).attr('data-code');
+				grades.clinicalret = $(this).attr('data-code');
 			}
 
 			return false;
@@ -1259,18 +1239,18 @@ function OphCiExamination_DRGrading_dirtyCheck(_drawing) {
 	});
 
 	// display clinical retinopathy description
-	dr_grade.find('div .'+dr_grade_et_class+'_'+side+'_clinicalret_desc').hide();
-	dr_grade.find('div#'+dr_grade_et_class+'_'+side+'_clinicalret_desc_' + clinicalret.replace(/\s+/g, '')).show();
+	dr_grade.find('div .'+dr_grade_et_class+'_'+grades.side+'_clinicalret_desc').hide();
+	dr_grade.find('div#'+dr_grade_et_class+'_'+grades.side+'_clinicalret_desc_' + grades.clinicalret.replace(/\s+/g, '')).show();
 
 	// clinical maculopathy
-	var cmSel = dr_grade.find('select#'+dr_grade_et_class+'_'+side+'_clinicalmac_id');
+	var cmSel = dr_grade.find('select#'+dr_grade_et_class+'_'+grades.side+'_clinicalmac_id');
 	var cmSelVal = cmSel.val();
 
 	cmSel.find('option').each(function() {
 		if ($(this).attr('value') == cmSelVal) {
-			if ($(this).attr('data-code') != clinicalmac) {
+			if ($(this).attr('data-code') != grades.clinicalmac) {
 				dirty = true;
-				clinicalmac = $(this).attr('data-code');
+				grades.clinicalmac = $(this).attr('data-code');
 			}
 
 			return false;
@@ -1278,18 +1258,18 @@ function OphCiExamination_DRGrading_dirtyCheck(_drawing) {
 	});
 
 	// display clinical maculopathy description
-	dr_grade.find('div .'+dr_grade_et_class+'_'+side+'_clinicalmac_desc').hide();
-	dr_grade.find('div#'+dr_grade_et_class+'_'+side+'_clinicalmac_desc_' + clinicalmac.replace(/\s+/g, '')).show();
+	dr_grade.find('div .'+dr_grade_et_class+'_'+grades.side+'_clinicalmac_desc').hide();
+	dr_grade.find('div#'+dr_grade_et_class+'_'+grades.side+'_clinicalmac_desc_' + grades.clinicalmac.replace(/\s+/g, '')).show();
 
 		//retinopathy
-		var retSel = dr_grade.find('select#'+dr_grade_et_class+'_'+side+'_nscretinopathy_id');
+		var retSel = dr_grade.find('select#'+dr_grade_et_class+'_'+grades.side+'_nscretinopathy_id');
 		var retSelVal = retSel.val();
 
 		retSel.find('option').each(function() {
 			if ($(this).attr('value') == retSelVal) {
-				if ($(this).attr('data-code') != retinopathy) {
+				if ($(this).attr('data-code') != grades.retinopathy) {
 					dirty = true;
-					retinopathy = $(this).attr('data-code');
+					grades.retinopathy = $(this).attr('data-code');
 				}
 
 				return false;
@@ -1297,40 +1277,40 @@ function OphCiExamination_DRGrading_dirtyCheck(_drawing) {
 		});
 
 		// retinopathy photocogaulation
-		if ($('input[name="'+dr_grade_et_class+'\['+side+'_nscretinopathy_photocoagulation\]"]:checked').val() != ret_photo) {
+		if ($('input[name="'+dr_grade_et_class+'\['+grades.side+'_nscretinopathy_photocoagulation\]"]:checked').val() != grades.ret_photo) {
 			dirty = true;
 		}
 
 		// maculopathy photocoagulation
-		if ($('input[name="'+dr_grade_et_class+'\['+side+'_nscmaculopathy_photocoagulation\]"]:checked').val() != mac_photo) {
+		if ($('input[name="'+dr_grade_et_class+'\['+grades.side+'_nscmaculopathy_photocoagulation\]"]:checked').val() != grades.mac_photo) {
 			dirty = true;
 		}
 
 		// Maculopathy
-		var macSel = dr_grade.find('select#'+dr_grade_et_class+'_'+side+'_nscmaculopathy_id');
+		var macSel = dr_grade.find('select#'+dr_grade_et_class+'_'+grades.side+'_nscmaculopathy_id');
 		var macSelVal = macSel.val();
 
 		macSel.find('option').each(function() {
 			if ($(this).attr('value') == macSelVal) {
-				if ($(this).attr('data-code') != maculopathy) {
+				if ($(this).attr('data-code') != grades.maculopathy) {
 					dirty = true;
-					maculopathy = $(this).attr('data-code');
+					grades.maculopathy = $(this).attr('data-code');
 				}
 				return false;
 			}
 		});
 
 		// display descriptions
-		dr_grade.find('div .'+dr_grade_et_class+'_'+side+'_nscretinopathy_desc').hide();
-		dr_grade.find('div#'+dr_grade_et_class+'_'+side+'_nscretinopathy_desc_' + retinopathy).show();
+		dr_grade.find('div .'+dr_grade_et_class+'_'+grades.side+'_nscretinopathy_desc').hide();
+		dr_grade.find('div#'+dr_grade_et_class+'_'+grades.side+'_nscretinopathy_desc_' + grades.retinopathy).show();
 
-		dr_grade.find('div .'+dr_grade_et_class+'_'+side+'_nscmaculopathy_desc').hide();
-		dr_grade.find('div#'+dr_grade_et_class+'_'+side+'_nscmaculopathy_desc_' + maculopathy).show();
+		dr_grade.find('div .'+dr_grade_et_class+'_'+grades.side+'_nscmaculopathy_desc').hide();
+		dr_grade.find('div#'+dr_grade_et_class+'_'+grades.side+'_nscmaculopathy_desc_' + grades.maculopathy).show();
 
 		if (dirty) {
 			$('#drgrading_dirty').show();
 		}
-	dr_grade.find('.side[data-side="'+side+'"]').removeClass('uninitialised');
+	dr_grade.find('.side[data-side="'+grades.side+'"]').removeClass('uninitialised');
 }
 
 /**
@@ -1363,7 +1343,7 @@ function OphCiExamination_DRGrading_update(side) {
 		var drawing = window[drawingName];
 		var grades = gradeCalculator(drawing);
 		if (grades) {
-			updateDRGrades(drawing, grades[0], grades[1], grades[2], grades[3], grades[4], grades[5]);
+			updateDRGrades(drawing, grades);
 		}
 	}
 }
@@ -1411,7 +1391,7 @@ function OphCiExamination_DRGrading_init(previous_id) {
 			if (!$('#drgrading_dirty').is(":visible")) {
 				var grades = gradeCalculator(_drawing);
 
-				updateDRGrades(_drawing, grades[0], grades[1], grades[2], grades[3], grades[4], grades[5]);
+				updateDRGrades(_drawing, grades);
 			}
 		};
 

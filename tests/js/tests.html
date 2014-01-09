@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>OphCiExamination JS tests</title>
+<link rel="stylesheet" href="../../../../../node_modules/mocha/mocha.css">
+<script src="../../../../../protected/yii/framework/web/js/source/jquery.js"></script>
+<script src="../../../../../js/buttons.js"></script>
+<script src="../../assets/js/module.js"></script>
+<script src="../../../../../node_modules/mocha/mocha.js"></script>
+</head>
+<body>
+<div id="mocha"></div>
+<script type="text/javascript">
+mocha.setup({ui: "tdd", checkLeaks: true});
+mocha.checkLeaks();
+</script>
+<script src="DRGradingTest.js"></script>
+<script type="text/javascript">
+mocha.run();
+</script>
+</body>
+</html>

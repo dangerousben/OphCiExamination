@@ -262,10 +262,23 @@ function posteriorListener(_drawing) {
 	}
 	this.side = side;
 
-	this.drawing.registerForNotifications(this, 'callBack', ['doodleAdded', 'doodleDeleted', 'parameterChanged']);
+	this.drawing.registerForNotifications(this, 'callBack', ['ready', 'doodleAdded', 'doodleDeleted', 'parameterChanged']);
 
 	this.callBack = function (_messageArray) {
-		OphCiExamination_DRGrading_update(side);
+		if (_messageArray.eventName == 'ready') {
+			var dr_grade = $('#' + _drawing.canvas.id).closest('.element').find('.' + OE_MODEL_PREFIX + dr_grade_et_class);
+			var dr_side = dr_grade.find('.side[data-side="'+side+'"]');
+
+			OphCiExamination_DRGrading_dirtyCheck(_drawing);
+
+			if (!$('#drgrading_dirty').is(":visible")) {
+				var grades = gradeCalculator(_drawing);
+
+				updateDRGrades(_drawing, grades[0], grades[1], grades[2], grades[3], grades[4], grades[5]);
+			}
+		} else {
+			OphCiExamination_DRGrading_update(side);
+		}
 	}
 }
 
@@ -1435,39 +1448,6 @@ function OphCiExamination_DRGrading_update(side) {
 			updateDRGrades(drawing, grades[0], grades[1], grades[2], grades[3], grades[4], grades[5]);
 		}
 	}
-}
-
-function OphCiExamination_PosteriorPole_init() {
-	$('.'+OE_MODEL_PREFIX+'Element_OphCiExamination_PosteriorPole').find('canvas').each(function() {
-
-		var drawingName = $(this).attr('data-drawing-name');
-
-		var func = function() {
-			var _drawing = ED.getInstance(drawingName);
-			var side = 'right';
-			if (_drawing.eye) {
-				side = 'left';
-			}
-			var dr_grade = $('#' + _drawing.canvas.id).closest('.element').find('.' + OE_MODEL_PREFIX + dr_grade_et_class);
-			var dr_side = dr_grade.find('.side[data-side="'+side+'"]');
-
-			OphCiExamination_DRGrading_dirtyCheck(_drawing);
-
-			if (!$('#drgrading_dirty').is(":visible")) {
-				var grades = gradeCalculator(_drawing);
-
-				updateDRGrades(_drawing, grades[0], grades[1], grades[2], grades[3], grades[4], grades[5]);
-			}
-		};
-
-		if (ED.getInstance(drawingName)) {
-			func();
-		}
-		else {
-			edChecker = getOEEyeDrawChecker();
-			edChecker.registerForReady(func);
-		}
-	});
 }
 
 function OphCiExamination_DRGrading_init() {
